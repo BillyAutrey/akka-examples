@@ -5,6 +5,10 @@ version := "0.1"
 scalaVersion := "2.12.8"
 lazy val akkaVersion = "2.5.19"
 
+lazy val root = (project in file("."))
+  .enablePlugins(MultiJvmPlugin)
+  .configs(MultiJvm)
+
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,

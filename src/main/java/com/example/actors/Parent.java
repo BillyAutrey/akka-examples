@@ -2,6 +2,7 @@ package com.example.actors;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent.*;
 import akka.routing.FromConfig;
@@ -11,7 +12,7 @@ import com.example.messages.WorkerMessages.*;
 public class Parent extends AbstractActor {
 
     //#round-robin-group
-    private ActorRef router = getContext().actorOf(FromConfig.getInstance().props(), "router");
+    private ActorRef router = getContext().actorOf(FromConfig.getInstance().props(Props.empty()), "router");
     private ActorRef reportReceiver;
 
     Cluster cluster = Cluster.get(getContext().system());
