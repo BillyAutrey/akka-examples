@@ -34,7 +34,7 @@ public class Worker extends AbstractLoggingActor {
         if(count == 10){
             log().info("Processed 10 messages");
             count = 0;
-            sender().tell(new ProcessCount(10),context().self());
+            input.getReplyTo().tell(new ProcessCount(10),context().self());
         }
     }
 }

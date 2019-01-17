@@ -5,6 +5,7 @@ import akka.actor.ActorRef;
 import akka.actor.Cancellable;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
+import com.example.messages.WorkerMessages;
 import com.example.messages.WorkerMessages.Input;
 import com.example.messages.WorkerMessages.ProcessCount;
 import scala.concurrent.duration.Duration;
@@ -40,6 +41,8 @@ public class Client extends AbstractLoggingActor {
 
     @Override
     public Receive createReceive() {
-        return receiveBuilder().build();
+        return receiveBuilder()
+                .match(WorkerMessages.ProcessCount.class, processCount -> log().info("Got a count of {} from {}", processCount.getValue(),sender().path().toString()))
+                .build();
     }
 }
