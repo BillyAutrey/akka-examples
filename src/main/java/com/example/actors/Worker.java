@@ -29,7 +29,7 @@ public class Worker extends AbstractLoggingActor {
     }
 
     public void handleInput(Input input){
-        log().info("Got input for {}",input.getValue());
+        log().debug("Got input for {}",input.getValue());
         count++;
         if(count == 10){
             log().info("Processed 10 messages");
