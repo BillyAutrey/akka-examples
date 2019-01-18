@@ -17,7 +17,10 @@ import com.typesafe.config.ConfigFactory;
 public class ClientMain {
 
     static public void main(String[] args) {
-        ActorSystem system = ActorSystem.create("ClusterSystem", ConfigFactory.load());
+        Config config = ConfigFactory.parseString("akka.cluster.roles = [client]")
+                .withFallback(ConfigFactory.load());
+
+        ActorSystem system = ActorSystem.create("ClusterSystem", config);
 
         //access via proxy
         ClusterSingletonProxySettings proxySettings =
