@@ -17,6 +17,7 @@ class ParentWorkerMultiJvmNode1 extends ApplicationTest
 class ParentWorkerMultiJvmNode2 extends ApplicationTest
 class ParentWorkerMultiJvmNode3 extends ApplicationTest
 class ParentWorkerMultiJvmNode4 extends ApplicationTest
+class ParentWorkerMultiJvmNode5 extends ApplicationTest
 
 abstract class ApplicationTest extends MultiNodeSpec(AkkaClusterTestConfig)
   with WordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
@@ -34,30 +35,33 @@ abstract class ApplicationTest extends MultiNodeSpec(AkkaClusterTestConfig)
       Cluster(system).subscribe(testActor, classOf[MemberUp])
       expectMsgClass(classOf[CurrentClusterState])
 
-      val parentAddress = node(parent).address
       val worker1Address = node(worker1).address
+      val parent1Address = node(parent1).address
+      val parent2Address = node(parent2).address
       val worker2Address = node(worker2).address
       val worker3Address = node(worker3).address
 
-      Cluster(system) join parentAddress
+      Cluster(system) join worker1Address
 
-      //creating parent as a singleton on every node.
-      system.actorOf(ClusterSingletonManager.props(
-        Props[Parent],
-        terminationMessage = PoisonPill,
-        settings = ClusterSingletonManagerSettings(system).withRole("parent")),
-        name = "parent")
+      //creating parent as a singleton on parent nodes.
+      runOn(parent1,parent2) {
+        system.actorOf(ClusterSingletonManager.props(
+          Props[Parent],
+          terminationMessage = PoisonPill,
+          settings = ClusterSingletonManagerSettings(system).withRole("parent")),
+          name = "parent")
 
-      //creating a proxy to access the parent
-      system.actorOf(ClusterSingletonProxy.props(
-        singletonManagerPath = "/user/parent",
-        settings = ClusterSingletonProxySettings(system).withRole("parent")
-      ), "parentProxy")
+        //creating a proxy to access the parent
+        system.actorOf(ClusterSingletonProxy.props(
+          singletonManagerPath = "/user/parent",
+          settings = ClusterSingletonProxySettings(system).withRole("parent")
+        ), "parentProxy")
+      }
 
       system.actorOf(Props[Worker], "worker")
 
-      receiveN(4).collect { case MemberUp(m) ⇒ m.address }.toSet should be(
-        Set(parentAddress, worker1Address,worker2Address,worker3Address))
+      receiveN(5).collect { case MemberUp(m) ⇒ m.address }.toSet should be(
+        Set(parent1Address, parent2Address, worker1Address,worker2Address,worker3Address))
 
       Cluster(system).unsubscribe(testActor)
 
@@ -65,7 +69,7 @@ abstract class ApplicationTest extends MultiNodeSpec(AkkaClusterTestConfig)
     }
 
     "send messages across the cluster" in within(15.seconds) {
-      val parentRef = system.actorSelection(RootActorPath(node(parent).address)/"user"/"parentProxy")
+      val parentRef = system.actorSelection(RootActorPath(node(parent1).address)/"user"/"parentProxy")
 
       val input = (1 to 300).map(_.toString)
 
